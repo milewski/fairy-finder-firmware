@@ -1,0 +1,8 @@
+{
+  "schema": 1,
+  "board": "waveshare-esp32-s3-zero",
+  "version": "0.2.2",
+  "size": 1916352,
+  "sha256": "284748e9d54c6789763a1a4d0ca880f2af2bca32e5b4136ec465eec28be804d3",
+  "url": "https://github.com/milewski/fairy-finder-firmware/releases/download/firmware-v0.2.2/fairy-finder.bin"
+}
