@@ -1,0 +1,67 @@
+name: Publish firmware assets
+
+on:
+  push:
+    tags:
+      - firmware-v*
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing firmware-vVERSION tag to publish
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firmware-${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'milewski/fairy-finder-firmware'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          persist-credentials: false
+
+      - name: Verify public release files
+        run: |
+          python3 - <<'PYTHON'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import re
+
+          manifest = json.loads(Path("firmware.json").read_text())
+          version = manifest["version"]
+          if re.fullmatch(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)", version, re.ASCII) is None:
+              raise SystemExit("Expected a stable version")
+          tag = f"firmware-v{version}"
+          image = Path("fairy-finder.bin").read_bytes()
+          expected_url = f"https://github.com/{os.environ['GITHUB_REPOSITORY']}/releases/download/{tag}/fairy-finder.bin"
+          if (os.environ["RELEASE_TAG"] != tag or manifest["schema"] != 1
+              or manifest["board"] != "waveshare-esp32-s3-zero"
+              or manifest["url"] != expected_url
+              or manifest["size"] != len(image) or not 288 <= len(image) <= 0x1f0000
+              or hashlib.sha256(image).hexdigest() != manifest["sha256"]):
+              raise SystemExit("Release metadata or binary integrity mismatch")
+          PYTHON
+
+      - name: Publish stable release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$RELEASE_TAG" firmware.json fairy-finder.bin \
+            --repo "$GITHUB_REPOSITORY" --verify-tag \
+            --title "Fairy Finder $RELEASE_TAG" \
+            --notes "App-only firmware and verified update manifest for Waveshare ESP32-S3-Zero." --latest
