@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "board": "waveshare-esp32-s3-zero",
-  "version": "0.3.14",
-  "size": 2025520,
-  "sha256": "b726aac4bd1b444a5377de2d457efde675e4232c61165425358c775df5f22c71",
-  "url": "https://github.com/milewski/fairy-finder-firmware/releases/download/firmware-v0.3.14/fairy-finder.bin"
+  "version": "0.3.15",
+  "size": 2027376,
+  "sha256": "9af576b4e92f3f15e814b035d65454665c7d3dfc08d08dbad916e6105ac8fa94",
+  "url": "https://github.com/milewski/fairy-finder-firmware/releases/download/firmware-v0.3.15/fairy-finder.bin"
 }
